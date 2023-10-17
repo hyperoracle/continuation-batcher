@@ -682,7 +682,7 @@ dependencies = [
 [[package]]
 name = "halo2_proofs"
 version = "0.1.0-beta.1"
-source = "git+https://github.com/DelphinusLab/halo2-gpu-specific.git#3d92486eac82722f0519c6f25387e5019abaa8ce"
+source = "git+https://github.com/hyperoracle/halo2-gpu-specific.git#f4c9152195386cf22ba0c4d3272f2b23984cc630"
 dependencies = [
  "ark-std",
  "blake2b_simd",
@@ -710,7 +710,7 @@ dependencies = [
 [[package]]
 name = "halo2aggregator-s"
 version = "0.1.0"
-source = "git+https://github.com/DelphinusLab/halo2aggregator-s.git?branch=main#953bbbd50ee05211e2395e69c9760095b80f6408"
+source = "git+https://github.com/hyperoracle/halo2aggregator-s.git?branch=develop#9170bdae8f50b03ea91388d07584d13f18682e85"
 dependencies = [
  "ark-std",
  "blake2b_simd",
@@ -1604,9 +1604,9 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.7.0"
+version = "3.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5486094ee78b2e5038a6382ed7645bc084dc2ec433426ca4c3cb61e2007b8998"
+checksum = "cb94d2f3cc536af71caac6b6fcebf65860b347e7ce0cc9ebe8f70d3e521054ef"
 dependencies = [
  "cfg-if 1.0.0",
  "fastrand",

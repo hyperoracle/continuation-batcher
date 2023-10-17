@@ -78,11 +78,7 @@ impl<E: MultiMillerLoop> ParamsCache<E> {
     pub fn contains(&mut self, key: &String) -> bool {
         self.cache.get(key).is_some()
     }
-    pub fn push<'a>(
-        &'a mut self,
-        key: String,
-        v: Params<E::G1Affine>,
-    ) -> &'a Params<E::G1Affine> {
+    pub fn push<'a>(&'a mut self, key: String, v: Params<E::G1Affine>) -> &'a Params<E::G1Affine> {
         self.cache.push(key.clone(), v);
         self.cache.get(&key).unwrap()
     }
@@ -150,9 +146,17 @@ impl ProofGenerationInfo {
 }
 
 impl ProofGenerationInfo {
-    pub fn create_proofs<E: MultiMillerLoop>(&self, cache_folder: &Path, param_folder: &Path, params_cache: &mut ParamsCache<E>,) {
-        let params =
-            load_or_build_unsafe_params::<E>(self.k, &param_folder.join(self.param.clone()), params_cache);
+    pub fn create_proofs<E: MultiMillerLoop>(
+        &self,
+        cache_folder: &Path,
+        param_folder: &Path,
+        params_cache: &mut ParamsCache<E>,
+    ) {
+        let params = load_or_build_unsafe_params::<E>(
+            self.k,
+            &param_folder.join(self.param.clone()),
+            params_cache,
+        );
 
         let pkey = read_pk_full::<E>(&params, &param_folder.join(self.circuit.clone()));
 
@@ -408,8 +412,11 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> CircuitInfo<E, C> {
         index: usize,
         param_cache: &mut ParamsCache<E>,
     ) -> Vec<u8> {
-        let params =
-            load_or_build_unsafe_params::<E>(self.k, &param_folder.join(&self.proofloadinfo.param), param_cache);
+        let params = load_or_build_unsafe_params::<E>(
+            self.k,
+            &param_folder.join(&self.proofloadinfo.param),
+            param_cache,
+        );
         let pkey = load_or_build_pkey::<E, C>(
             &params,
             self.circuits.first().unwrap(),
@@ -522,7 +529,7 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> Prover<E> for CircuitInfo<E, C> 
         let params = load_or_build_unsafe_params::<E>(
             self.k,
             &param_folder.join(self.proofloadinfo.param.clone()),
-            param_cache
+            param_cache,
         );
         let pkey = load_or_build_pkey::<E, C>(
             &params,

@@ -1,21 +1,21 @@
 use crate::args::HashType;
-use crate::proof::ProofLoadInfo;
 use crate::proof::CircuitInfo;
 use crate::proof::ProofInfo;
+use crate::proof::ProofLoadInfo;
 use ark_std::end_timer;
 use ark_std::start_timer;
 use halo2_proofs::arithmetic::Engine;
 use halo2_proofs::arithmetic::MultiMillerLoop;
 use halo2_proofs::poly::commitment::{Params, ParamsVerifier};
-use halo2aggregator_s::circuit_verifier::G2AffineBaseHelper;
 use halo2aggregator_s::circuit_verifier::build_aggregate_verify_circuit;
 use halo2aggregator_s::circuit_verifier::circuit::AggregatorCircuit;
+use halo2aggregator_s::circuit_verifier::G2AffineBaseHelper;
 use halo2aggregator_s::circuits::utils::TranscriptHash;
 use halo2aggregator_s::native_verifier;
 use halo2ecc_s::circuit::pairing_chip::PairingChipOps;
 use halo2ecc_s::context::NativeScalarEccContext;
-use std::path::Path;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct CommitmentName {
@@ -44,7 +44,7 @@ pub struct CommitmentAbsorb {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct CommitmentCheck{
+pub struct CommitmentCheck {
     pub equivalents: Vec<CommitmentEquivPair>,
     pub expose: Vec<CommitmentName>,
     pub absorb: Vec<CommitmentAbsorb>,
@@ -73,12 +73,14 @@ pub struct BatchInfo<E: MultiMillerLoop> {
 }
 
 impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
-    where NativeScalarEccContext<<E as Engine>::G1Affine>: PairingChipOps<<E as Engine>::G1Affine, <E as Engine>::Scalar>
+where
+    NativeScalarEccContext<<E as Engine>::G1Affine>:
+        PairingChipOps<<E as Engine>::G1Affine, <E as Engine>::Scalar>,
 {
     fn get_commitment_index(
         &self,
         proofsinfo: &Vec<ProofLoadInfo>,
-        cn: &CommitmentName
+        cn: &CommitmentName,
     ) -> (usize, usize) {
         let mut idx = 0;
         let mut column_idx = None;
@@ -86,18 +88,13 @@ impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
             if proofinfo.name == cn.name {
                 idx += cn.proof_idx;
                 let c = self.proofs[idx]
-                    .vkey.cs
+                    .vkey
+                    .cs
                     .named_advices
                     .iter()
                     .position(|r| r.0 == cn.column_name)
                     .unwrap();
-                column_idx = Some (
-                    self.proofs[idx]
-                    .vkey
-                    .cs
-                    .named_advices[c]
-                    .1
-                );
+                column_idx = Some(self.proofs[idx].vkey.cs.named_advices[c].1);
                 break;
             } else {
                 idx += proofinfo.transcripts.len()
@@ -109,7 +106,7 @@ impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
     fn get_instance_index(
         &self,
         proofsinfo: &Vec<ProofLoadInfo>,
-        ci: &CommitmentInInstance
+        ci: &CommitmentInInstance,
     ) -> [usize; 3] {
         let mut idx = 0;
         for proofinfo in proofsinfo.iter() {
@@ -121,7 +118,6 @@ impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
             }
         }
         [idx, 0, ci.group_idx * 3] // each commitment as instances are grouped by 3
-
     }
 
     pub fn load_commitments_check(
@@ -143,7 +139,6 @@ impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
             let t = self.get_commitment_index(proofsinfo, &absorb.target);
             self.absorb.push((s, [t.0, t.1]));
         }
-
     }
 
     pub fn build_aggregate_circuit(
@@ -160,10 +155,14 @@ impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
             all_proofs.push((&proof.transcripts).clone());
             vkeys.push(&proof.vkey);
             //public_inputs_size += proof.instances.len() * 3;
-            public_inputs_size =
-                usize::max(public_inputs_size, proof.instances.iter().fold(0, |acc, x| usize::max(acc, x.len())));
+            public_inputs_size = usize::max(
+                public_inputs_size,
+                proof
+                    .instances
+                    .iter()
+                    .fold(0, |acc, x| usize::max(acc, x.len())),
+            );
             instances.push(&proof.instances);
-
         }
         println!("public input size {}", public_inputs_size);
 
@@ -194,7 +193,6 @@ impl<E: MultiMillerLoop + G2AffineBaseHelper> BatchInfo<E>
         println!("commitment equiv: {:?}", self.equivalents);
         println!("commitment expose: {:?}", self.expose);
         println!("commitment absorb: {:?}", self.absorb);
-
 
         // circuit multi check
         let timer = start_timer!(|| "build aggregate verify circuit");
