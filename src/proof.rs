@@ -615,13 +615,13 @@ pub fn load_or_build_pkey<'a, E: MultiMillerLoop, C: Circuit<E::Scalar>>(
     }
 }
 
-fn store_info_full<E: MultiMillerLoop, C: Circuit<E::Scalar>>(
+pub fn store_info_full<E: MultiMillerLoop, C: Circuit<E::Scalar>>(
     params: &Params<E::G1Affine>,
     vkey: &VerifyingKey<E::G1Affine>,
     circuit: &C,
     cache_file: &Path,
 ) {
-    log::info!("store vkey full to {:?}", cache_file);
+    log::info!("store info full to {:?}", cache_file);
     let mut fd = OpenOptions::new()
         .read(true)
         .write(true)
@@ -633,13 +633,13 @@ fn store_info_full<E: MultiMillerLoop, C: Circuit<E::Scalar>>(
     store_pk_info(params, vkey, circuit, &mut fd).unwrap();
 }
 
-pub(crate) fn read_vkey_full<E: MultiMillerLoop>(cache_file: &Path) -> VerifyingKey<E::G1Affine> {
+pub fn read_vkey_full<E: MultiMillerLoop>(cache_file: &Path) -> VerifyingKey<E::G1Affine> {
     log::info!("read vkey full from {:?}", cache_file);
     let mut fd = std::fs::File::open(&cache_file).unwrap();
     VerifyingKey::<E::G1Affine>::fetch(&mut fd).unwrap()
 }
 
-pub(crate) fn read_pk_full<E: MultiMillerLoop>(
+pub fn read_pk_full<E: MultiMillerLoop>(
     params: &Params<E::G1Affine>,
     cache_file: &Path,
 ) -> ProvingKey<E::G1Affine> {
