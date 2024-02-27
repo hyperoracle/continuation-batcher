@@ -113,7 +113,9 @@ pub fn exec_batch_proofs(
     let agg_circuit = batchinfo.build_aggregate_circuit(proof_name.clone(), hash, &params);
     agg_circuit.proofloadinfo.save(&output_dir);
     let agg_info = agg_circuit.proofloadinfo.clone();
-    agg_circuit.exec_create_proof(&output_dir, &param_dir, pkey_cache, 0, params_cache);
+    agg_circuit
+        .exec_create_proof(&output_dir, &param_dir, pkey_cache, 0, params_cache)
+        .expect("should not fail");
 
     let proof: Vec<ProofInfo<Bn256>> = ProofInfo::load_proof(&output_dir, &param_dir, &agg_info);
 

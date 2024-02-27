@@ -1,4 +1,5 @@
 use crate::args::HashType;
+use anyhow::Result;
 use ark_std::rand::rngs::OsRng;
 use halo2_proofs::arithmetic::MultiMillerLoop;
 use halo2_proofs::dev::MockProver;
@@ -382,8 +383,11 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> CircuitInfo<E, C> {
 }
 
 pub trait Prover<E: MultiMillerLoop> {
-    fn create_proof(&self, params: &Params<E::G1Affine>, pkey: &ProvingKey<E::G1Affine>)
-        -> Vec<u8>;
+    fn create_proof(
+        &self,
+        params: &Params<E::G1Affine>,
+        pkey: &ProvingKey<E::G1Affine>,
+    ) -> Result<Vec<u8>>;
     fn create_witness(
         &self,
         cache_folder: &Path,
@@ -411,7 +415,7 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> CircuitInfo<E, C> {
         pkey_cache: &mut ProvingKeyCache<E>,
         index: usize,
         param_cache: &mut ParamsCache<E>,
-    ) -> Vec<u8> {
+    ) -> Result<Vec<u8>> {
         let params = load_or_build_unsafe_params::<E>(
             self.k,
             &param_folder.join(&self.proofloadinfo.param),
@@ -430,14 +434,14 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> CircuitInfo<E, C> {
             &cache_folder.join(self.proofloadinfo.instances[index].as_str()),
         );
 
-        let r = self.create_proof(&params, &pkey);
+        let r = self.create_proof(&params, &pkey)?;
 
         let cache_file = &cache_folder.join(&self.proofloadinfo.transcripts[index]);
         log::debug!("create transcripts file {:?}", cache_file);
         let mut fd = std::fs::File::create(&cache_file).unwrap();
         fd.write_all(&r).unwrap();
 
-        r
+        Ok(r)
     }
 }
 
@@ -446,7 +450,7 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> Prover<E> for CircuitInfo<E, C> 
         &self,
         params: &Params<E::G1Affine>,
         pkey: &ProvingKey<E::G1Affine>,
-    ) -> Vec<u8> {
+    ) -> Result<Vec<u8>> {
         use ark_std::{end_timer, start_timer};
 
         let inputs_size = self
@@ -471,8 +475,7 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> Prover<E> for CircuitInfo<E, C> 
                     &[instances.as_slice()],
                     OsRng,
                     &mut transcript,
-                )
-                .expect("proof generation should not fail");
+                )?;
 
                 let r = transcript.finalize();
                 log::info!("proof created with instance: {:?}", self.instances);
@@ -482,8 +485,7 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> Prover<E> for CircuitInfo<E, C> 
                     strategy,
                     &[&instances.iter().map(|x| &x[..]).collect::<Vec<_>>()[..]],
                     &mut PoseidonRead::init(&r[..]),
-                )
-                .unwrap();
+                )?;
                 log::info!("verify halo2 proof succeed");
                 r
             }
@@ -496,8 +498,7 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> Prover<E> for CircuitInfo<E, C> 
                     &[instances.as_slice()],
                     OsRng,
                     &mut transcript,
-                )
-                .expect("proof generation should not fail");
+                )?;
 
                 let r = transcript.finalize();
                 log::info!("proof created with instance ... {:?}", self.instances);
@@ -507,15 +508,14 @@ impl<E: MultiMillerLoop, C: Circuit<E::Scalar>> Prover<E> for CircuitInfo<E, C> 
                     strategy,
                     &[&instances.iter().map(|x| &x[..]).collect::<Vec<_>>()[..]],
                     &mut ShaRead::<_, _, _, sha2::Sha256>::init(&r[..]),
-                )
-                .unwrap();
+                )?;
                 log::info!("verify halo2 proof succeed");
                 r
             }
         };
         end_timer!(timer);
 
-        r
+        Ok(r)
     }
 
     fn create_witness(
@@ -692,13 +692,15 @@ fn batch_single_circuit() {
             0,
             K_PARAMS_CACHE.lock().as_mut().unwrap(),
         );
-        circuit_info.exec_create_proof(
-            &Path::new("output"),
-            &Path::new("params"),
-            PKEY_CACHE.lock().as_mut().unwrap(),
-            0,
-            K_PARAMS_CACHE.lock().as_mut().unwrap(),
-        );
+        circuit_info
+            .exec_create_proof(
+                &Path::new("output"),
+                &Path::new("params"),
+                PKEY_CACHE.lock().as_mut().unwrap(),
+                0,
+                K_PARAMS_CACHE.lock().as_mut().unwrap(),
+            )
+            .unwrap();
 
         proofloadinfo.save(&Path::new("output"));
     }
@@ -726,13 +728,15 @@ fn batch_single_circuit() {
             0,
             K_PARAMS_CACHE.lock().as_mut().unwrap(),
         );
-        circuit_info.exec_create_proof(
-            &Path::new("output"),
-            &Path::new("params"),
-            PKEY_CACHE.lock().as_mut().unwrap(),
-            0,
-            K_PARAMS_CACHE.lock().as_mut().unwrap(),
-        );
+        circuit_info
+            .exec_create_proof(
+                &Path::new("output"),
+                &Path::new("params"),
+                PKEY_CACHE.lock().as_mut().unwrap(),
+                0,
+                K_PARAMS_CACHE.lock().as_mut().unwrap(),
+            )
+            .unwrap();
 
         proofloadinfo.save(&Path::new("output"));
     }
