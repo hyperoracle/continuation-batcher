@@ -41,10 +41,9 @@ pub struct ProvingKeyCache<E: MultiMillerLoop> {
 }
 
 impl<E: MultiMillerLoop> ProvingKeyCache<E> {
-    pub fn new() -> Self {
-        let lrucache = LruCache::<String, ProvingKey<E::G1Affine>>::new(
-            NonZeroUsize::new(DEFAULT_CACHE_SIZE).unwrap(),
-        );
+    pub fn new(size: usize) -> Self {
+        let lrucache =
+            LruCache::<String, ProvingKey<E::G1Affine>>::new(NonZeroUsize::new(size).unwrap());
         ProvingKeyCache { cache: lrucache }
     }
     pub fn contains(&mut self, key: &String) -> bool {
@@ -62,7 +61,7 @@ impl<E: MultiMillerLoop> ProvingKeyCache<E> {
 
 lazy_static::lazy_static! {
     pub static ref PKEY_CACHE: Mutex<ProvingKeyCache<Bn256>> =
-        Mutex::new(ProvingKeyCache::new());
+        Mutex::new(ProvingKeyCache::new(DEFAULT_CACHE_SIZE));
 }
 
 pub struct ParamsCache<E: MultiMillerLoop> {
@@ -70,10 +69,9 @@ pub struct ParamsCache<E: MultiMillerLoop> {
 }
 
 impl<E: MultiMillerLoop> ParamsCache<E> {
-    pub fn new() -> Self {
-        let lrucache = LruCache::<String, Params<E::G1Affine>>::new(
-            NonZeroUsize::new(DEFAULT_CACHE_SIZE).unwrap(),
-        );
+    pub fn new(size: usize) -> Self {
+        let lrucache =
+            LruCache::<String, Params<E::G1Affine>>::new(NonZeroUsize::new(size).unwrap());
         ParamsCache { cache: lrucache }
     }
     pub fn contains(&mut self, key: &String) -> bool {
@@ -87,7 +85,7 @@ impl<E: MultiMillerLoop> ParamsCache<E> {
 
 lazy_static::lazy_static! {
     pub static ref K_PARAMS_CACHE: Mutex<ParamsCache<Bn256>> =
-        Mutex::new(ParamsCache::new());
+        Mutex::new(ParamsCache::new(DEFAULT_CACHE_SIZE));
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
